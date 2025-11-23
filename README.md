@@ -4,6 +4,8 @@
 Design pages with editable blocks (headings, paragraphs, images, buttons), style them inline, manage multiple pages, and export static HTML you can host anywhere.
 
 ---
+## Important ⚠️
+**Text are editable** . so you need to `false` editable content manually.
 
 ## 🚀 Key Features
 
