@@ -1,5 +1,6 @@
 #  WebDrow — Visually Web Builder 
-
+### (go to main branch for updated readme i am not changing this full)
+#### yes, I'm lazy 
 **Webdrow** a clean, fast, browser-based **Web builder** that lets anyone create simple multi-page websites directly in the browser — no server, no build tools, no installs.
 Design pages with editable blocks (headings, paragraphs, images, buttons), style them inline, manage multiple pages, and export static HTML you can host anywhere.
 
