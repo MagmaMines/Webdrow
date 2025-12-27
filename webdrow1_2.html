@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Webdrow Creator Pro | MagmaMines</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0984e3;
+            --dark: #2d3436;
+            --bg: #dfe6e9;
+            --panel: #ffffff;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* HEADER */
+        .app-header {
+            height: 55px; background: linear-gradient(135deg, #2d3436 0%, #1e272e 100%); color: white;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 10px; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .brand { 
+            font-weight: bold; 
+            color: var(--primary); 
+            font-size: 1.2rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #0984e3, 0 0 10px #0984e3; }
+            to { text-shadow: 0 0 10px #0984e3, 0 0 20px #0984e3, 0 0 30px #0984e3; }
+        }
+
+        .page-controls { display: flex; align-items: center; gap: 5px; }
+        #page-select { 
+            background: #444; color: white; border: 1px solid #666; 
+            padding: 5px; border-radius: 4px; max-width: 100px;
+            transition: all 0.3s;
+        }
+        #page-select:hover { border-color: var(--primary); }
+        
+        .btn-icon { 
+            background: none; border: none; color: #ccc; 
+            font-size: 16px; padding: 5px; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-icon:hover { color: var(--primary); transform: scale(1.2); }
+        
+        .btn-primary { 
+            background: var(--primary); color: white; border: none; 
+            padding: 6px 12px; border-radius: 20px; font-weight: bold;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-primary:hover { 
+            background: #74b9ff; 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(9, 132, 227, 0.4);
+        }
+        .text-danger { color: #ff7675; }
+
+        /* CANVAS */
+        .workspace { flex: 1; overflow: hidden; position: relative; display: flex; justify-content: center; }
+        #canvas-container { width: 100%; height: 100%; overflow-y: auto; padding-bottom: 90px; }
+        #canvas {
+            background: white; min-height: 800px; width: 100%; max-width: 800px;
+            margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 20px;
+        }
+
+        /* BLOCKS */
+        .wd-block { 
+            position: relative; border: 2px dashed transparent; 
+            margin-bottom: 5px; transition: all 0.3s;
+        }
+        .wd-block:hover { 
+            border-color: #b2bec3; 
+            transform: translateX(5px);
+        }
+        .wd-selected { 
+            border: 2px solid var(--primary) !important; 
+            background-color: rgba(9, 132, 227, 0.05);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(9, 132, 227, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(9, 132, 227, 0); }
+        }
+
+        [contenteditable]:focus { outline: none; }
+
+        /* ANIMATION CLASSES */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-in-left { animation: slideInLeft 0.5s ease-out; }
+        .slide-in-right { animation: slideInRight 0.5s ease-out; }
+        .bounce-in { animation: bounceIn 0.6s ease-out; }
+        .zoom-in { animation: zoomIn 0.5s ease-out; }
+        .rotate-in { animation: rotateIn 0.6s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes rotateIn {
+            from { transform: rotate(-200deg); opacity: 0; }
+            to { transform: rotate(0); opacity: 1; }
+        }
+
+        /* PROPERTIES PANEL */
+        #properties-bar {
+            position: absolute; bottom: 75px; left: 0; right: 0; margin: 0 auto;
+            width: 95%; max-width: 600px; max-height: 60vh;
+            background: var(--panel); border-radius: 15px;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.2); z-index: 150;
+            display: flex; flex-direction: column;
+            transition: transform 0.3s;
+        }
+        #properties-bar.hidden { transform: translateY(150%); }
+
+        .prop-header { 
+            background: linear-gradient(135deg, #f1f2f6 0%, #dfe4ea 100%); 
+            padding: 10px 15px; display: flex; justify-content: space-between; 
+            font-weight: bold; border-radius: 15px 15px 0 0; 
+        }
+        .prop-scroll-content { padding: 15px; overflow-y: auto; }
+        .prop-section { 
+            margin-bottom: 15px; border-bottom: 1px solid #eee; 
+            padding-bottom: 10px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .prop-section label { 
+            display: block; font-size: 0.75rem; color: #888; 
+            text-transform: uppercase; margin-bottom: 8px; font-weight: bold; 
+        }
+
+        .row-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .row-btns button, .color-wrap {
+            flex: 1; padding: 8px; border: 1px solid #ddd; background: white; 
+            border-radius: 6px; color: #555; position: relative; 
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s; min-width: 40px;
+        }
+        .row-btns button:hover, .color-wrap:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .color-wrap input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .btn-delete { color: #d63031 !important; border-color: #fab1a0 !important; }
+
+        textarea { 
+            width: 100%; background: #2d3436; color: #55efc4; 
+            border: none; padding: 10px; border-radius: 4px; 
+            font-family: monospace; resize: vertical;
+        }
+        input[type="text"], input[type="number"], select { 
+            width: 100%; padding: 8px; border: 1px solid #ddd; 
+            background: #f9f9f9; border-radius: 4px;
+            transition: all 0.3s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--primary);
+            background: white;
+            outline: none;
+        }
+
+        /* TOOLBAR */
+        .bottom-toolbar {
+            height: 70px; background: linear-gradient(135deg, #2d3436 0%, #1e272e 100%); 
+            position: absolute; bottom: 0; width: 100%;
+            z-index: 200; display: flex; align-items: center; padding: 0 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+        }
+        .tools-scroll { display: flex; gap: 10px; overflow-x: auto; width: 100%; }
+        .tools-scroll::-webkit-scrollbar { height: 4px; }
+        .tools-scroll::-webkit-scrollbar-track { background: #1e272e; }
+        .tools-scroll::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 2px; }
+        
+        .tools-scroll button {
+            background: #444; color: white; border: none; min-width: 60px; height: 50px;
+            border-radius: 8px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; font-size: 0.7rem; 
+            flex-shrink: 0; cursor: pointer; transition: all 0.3s;
+        }
+        .tools-scroll button:hover {
+            background: #555;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(9, 132, 227, 0.3);
+        }
+        .tools-scroll button i { 
+            font-size: 1.2rem; margin-bottom: 4px; color: var(--primary);
+            transition: all 0.3s;
+        }
+        .tools-scroll button:hover i {
+            transform: scale(1.2);
+        }
+
+        .hidden { display: none !important; }
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        /* TUTORIAL MODAL */
+        .tutorial-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .tutorial-content {
+            background: white; border-radius: 15px;
+            max-width: 90%; max-height: 90%; overflow-y: auto;
+            padding: 30px; box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            animation: bounceIn 0.5s ease-out;
+        }
+        .tutorial-content h2 {
+            color: var(--primary); margin-top: 0;
+            text-align: center; font-size: 1.8rem;
+        }
+        .tutorial-content h3 {
+            color: var(--dark); margin-top: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+        }
+        .tutorial-content ul {
+            line-height: 1.8;
+        }
+        .tutorial-content li {
+            margin-bottom: 10px;
+        }
+        .tutorial-close {
+            background: var(--primary); color: white;
+            border: none; padding: 10px 30px;
+            border-radius: 20px; cursor: pointer;
+            font-size: 1rem; font-weight: bold;
+            display: block; margin: 20px auto 0;
+            transition: all 0.3s;
+        }
+        .tutorial-close:hover {
+            background: #74b9ff;
+            transform: scale(1.05);
+        }
+
+        /* IMAGE EFFECTS */
+        .img-grayscale { filter: grayscale(100%); }
+        .img-sepia { filter: sepia(100%); }
+        .img-blur { filter: blur(3px); }
+        .img-brightness { filter: brightness(1.3); }
+        .img-contrast { filter: contrast(1.5); }
+        .img-shadow { box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .img-rounded { border-radius: 15px; }
+        .img-circle { border-radius: 50%; }
+
+        /* TABLE STYLES */
+        .wd-table {
+            width: 100%; border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .wd-table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        .wd-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .wd-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .wd-table tr:hover {
+            background: #f0f0f0;
+        }
+
+        /* TABLE CONTROLS */
+        .table-controls {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .table-controls button {
+            padding: 5px 10px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .table-controls button:hover {
+            background: #74b9ff;
+            transform: translateY(-2px);
+        }
+
+        /* MENU BAR STYLES */
+        .wd-menu {
+            background: #2d3436;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .wd-menu li {
+            position: relative;
+        }
+        .wd-menu a {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .wd-menu a:hover {
+            background: var(--primary);
+        }
+
+        /* MENU CONTROLS */
+        .menu-controls {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .menu-controls button {
+            padding: 5px 10px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .menu-controls button:hover {
+            background: #74b9ff;
+            transform: translateY(-2px);
+        }
+
+        /* VIDEO CONTAINER */
+        .wd-video {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+        }
+        .wd-video iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* MENU ITEM INLINE EDIT */
+        .menu-item-editable {
+            display: inline-block;
+            min-width: 50px;
+            padding: 2px;
+            border: 1px dashed transparent;
+        }
+        .menu-item-editable:hover {
+            border-color: #74b9ff;
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">WEBDROW PRO</div>
+        
+        <div class="page-controls">
+            <select id="page-select" onchange="switchPage(this.value)"></select>
+            <button class="btn-icon" onclick="addNewPage()"><i class="fas fa-plus"></i></button>
+            <button class="btn-icon text-danger" onclick="deletePage()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-icon" onclick="showTutorial()" title="Help"><i class="fas fa-question-circle"></i></button>
+            <button class="btn-primary" onclick="downloadSite()"><i class="fas fa-download"></i> Export</button>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div id="canvas-container">
+            <div id="canvas"></div>
+        </div>
+    </div>
+
+    <div id="properties-bar" class="hidden">
+        <div class="prop-header">
+            <span>Design Studio</span>
+            <button class="close-prop btn-icon" onclick="deselectAll()"><i class="fas fa-chevron-down"></i></button>
+        </div>
+        
+        <div class="prop-scroll-content">
+            <div class="prop-section">
+                <label>Text Formatting</label>
+                <div class="row-btns">
+                    <button onclick="applyFormat('fontWeight', 'bold')" title="Bold"><b>B</b></button>
+                    <button onclick="applyFormat('fontStyle', 'italic')" title="Italic"><i>I</i></button>
+                    <button onclick="applyFormat('textDecoration', 'underline')" title="Underline"><u>U</u></button>
+                </div>
+                <div style="margin-top:5px;">
+                    <select onchange="applyFormat('fontFamily', this.value)">
+                        <option value="inherit">Default Font</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="'Courier New', monospace">Courier</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+                        <option value="Impact, fantasy">Impact</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="prop-section">
+                <label>Style & Colors</label>
+                <div class="row-btns">
+                    <button onclick="applyClass('text-left')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                    <button onclick="applyClass('text-center')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                    <button onclick="applyClass('text-right')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    
+                    <div class="color-wrap" title="Text Color"><i class="fas fa-font"></i><input type="color" oninput="applyStyle('color', this.value)"></div>
+                    <div class="color-wrap bg-wrap" title="Background"><i class="fas fa-fill-drip"></i><input type="color" oninput="applyStyle('backgroundColor', this.value)"></div>
+                </div>
+            </div>
+
+            <div class="prop-section">
+                <label>Font Size</label>
+                <input type="number" id="prop-fontsize" placeholder="16" min="8" max="200" onchange="applyStyle('fontSize', this.value + 'px')">
+            </div>
+
+            <div class="prop-section">
+                <label>Dimensions</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="prop-width" placeholder="Width (px)" onchange="applyDimension('width', this.value)">
+                    <input type="number" id="prop-height" placeholder="Height (px)" onchange="applyDimension('height', this.value)">
+                </div>
+            </div>
+
+            <div class="prop-section">
+                <label>Animation Effect</label>
+                <select id="prop-animation" onchange="applyAnimation(this.value)">
+                    <option value="">No Animation</option>
+                    <option value="fade-in">Fade In</option>
+                    <option value="slide-in-left">Slide In Left</option>
+                    <option value="slide-in-right">Slide In Right</option>
+                    <option value="bounce-in">Bounce In</option>
+                    <option value="zoom-in">Zoom In</option>
+                    <option value="rotate-in">Rotate In</option>
+                </select>
+            </div>
+
+            <div id="img-effects-area" class="prop-section hidden">
+                <label>Image Effects</label>
+                <div class="row-btns">
+                    <button onclick="toggleImgEffect('img-grayscale')" title="Grayscale">B&W</button>
+                    <button onclick="toggleImgEffect('img-sepia')" title="Sepia">Sepia</button>
+                    <button onclick="toggleImgEffect('img-blur')" title="Blur">Blur</button>
+                    <button onclick="toggleImgEffect('img-brightness')" title="Bright">Bright</button>
+                    <button onclick="toggleImgEffect('img-shadow')" title="Shadow">Shadow</button>
+                </div>
+                <div class="row-btns" style="margin-top:5px;">
+                    <button onclick="toggleImgEffect('img-rounded')" title="Rounded">Round</button>
+                    <button onclick="toggleImgEffect('img-circle')" title="Circle">Circle</button>
+                </div>
+            </div>
+
+            <div id="table-controls-area" class="prop-section hidden">
+                <label>Table Controls</label>
+                <div class="row-btns">
+                    <button onclick="addTableRow()" title="Add Row"><i class="fas fa-plus"></i> Row</button>
+                    <button onclick="addTableColumn()" title="Add Column"><i class="fas fa-plus"></i> Col</button>
+                    <button onclick="deleteTableRow()" title="Delete Row"><i class="fas fa-minus"></i> Row</button>
+                    <button onclick="deleteTableColumn()" title="Delete Column"><i class="fas fa-minus"></i> Col</button>
+                </div>
+            </div>
+
+            <div id="menu-controls-area" class="prop-section hidden">
+                <label>Menu Controls</label>
+                <div class="row-btns">
+                    <button onclick="addMenuItem()" title="Add Menu Item"><i class="fas fa-plus"></i> Item</button>
+                    <button onclick="deleteMenuItem()" title="Delete Menu Item"><i class="fas fa-minus"></i> Item</button>
+                </div>
+            </div>
+
+            <div class="prop-section">
+                <label>Hyperlink / Image Src / Video URL</label>
+                <input type="text" id="prop-url" placeholder="https://..." onchange="updateUrl(this.value)">
+            </div>
+
+            <div class="prop-section">
+                <label>Alt Text / Link Name</label>
+                <input type="text" id="prop-alt" placeholder="Description" onchange="updateAlt(this.value)">
+            </div>
+
+            <div id="js-control-area" class="prop-section hidden">
+                <label>Client-Side JS (Event Logic)</label>
+                <textarea id="prop-js" rows="3" placeholder="alert('Hello');" onchange="updateJS(this.value)"></textarea>
+                <small style="color:#888; font-size:10px;">Runs on 'onchange' or 'onclick'</small>
+            </div>
+
+            <div id="seo-area" class="prop-section">
+                <label>SEO Title</label>
+                <input type="text" id="prop-seo-title" placeholder="SEO friendly title" onchange="updateSEO('title', this.value)">
+                <label style="margin-top:10px;">SEO Description</label>
+                <textarea id="prop-seo-desc" rows="2" placeholder="Page description for search engines" onchange="updateSEO('desc', this.value)"></textarea>
+                <label style="margin-top:10px;">SEO Keywords</label>
+                <input type="text" id="prop-seo-keys" placeholder="keyword1, keyword2, keyword3" onchange="updateSEO('keys', this.value)">
+            </div>
+
+            <div class="prop-section">
+                <div class="row-btns">
+                    <button onclick="moveBlock('up')" title="Move Up"><i class="fas fa-arrow-up"></i></button>
+                    <button onclick="moveBlock('down')" title="Move Down"><i class="fas fa-arrow-down"></i></button>
+                    <button onclick="duplicateBlock()" title="Duplicate"><i class="fas fa-copy"></i></button>
+                    <button class="btn-delete" onclick="deleteBlock()" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-toolbar">
+        <div class="tools-scroll">
+            <button onclick="addBlock('h1')"><i class="fas fa-heading"></i> Title</button>
+            <button onclick="addBlock('p')"><i class="fas fa-paragraph"></i> Text</button>
+            <button onclick="addBlock('input')"><i class="fas fa-i-cursor"></i> Input</button>
+            <button onclick="addBlock('button')"><i class="fas fa-mouse"></i> Button</button>
+            <button onclick="addBlock('ul')"><i class="fas fa-list-ul"></i> List</button>
+            <button onclick="addBlock('img')"><i class="fas fa-image"></i> Image</button>
+            <button onclick="addBlock('video')"><i class="fas fa-video"></i> Video</button>
+            <button onclick="addBlock('table')"><i class="fas fa-table"></i> Table</button>
+            <button onclick="addBlock('menu')"><i class="fas fa-bars"></i> Menu</button>
+            <button onclick="addBlock('spacer')"><i class="fas fa-arrows-alt-v"></i> Space</button>
+            <button onclick="setPageMeta()"><i class="fas fa-cog"></i> Meta</button>
+            <button onclick="showTutorial()"><i class="fas fa-question-circle"></i> Help</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const propBar = document.getElementById('properties-bar');
+        const jsArea = document.getElementById('js-control-area');
+        const imgEffectsArea = document.getElementById('img-effects-area');
+        const tableControlsArea = document.getElementById('table-controls-area');
+        const menuControlsArea = document.getElementById('menu-controls-area');
+        const pageSelect = document.getElementById('page-select');
+
+        let selectedBlock = null;
+
+        let pages = { 
+            'Home': { 
+                html: '<h1 class="wd-block text-center fade-in" contenteditable="true">Welcome to Webdrow Pro</h1>', 
+                title: 'Home Page', 
+                fav: '', 
+                bg: '#ffffff',
+                seo: { title: '', desc: '', keys: '' }
+            } 
+        };
+        let currentPage = 'Home';
+
+        window.onload = function() {
+            const saved = localStorage.getItem('wd_pages_v3');
+            if(saved) {
+                try {
+                    pages = JSON.parse(saved);
+                } catch(e) {
+                    console.error('Error loading saved data');
+                }
+            }
+            renderPageOptions();
+            loadPage('Home');
+            
+            if(!localStorage.getItem('wd_tutorial_shown')) {
+                setTimeout(showTutorial, 500);
+                localStorage.setItem('wd_tutorial_shown', 'true');
+            }
+        };
+
+        function renderPageOptions() {
+            pageSelect.innerHTML = '';
+            Object.keys(pages).forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                if(name === currentPage) opt.selected = true;
+                pageSelect.appendChild(opt);
+            });
+        }
+
+        function switchPage(name) {
+            saveCurrentState();
+            currentPage = name;
+            loadPage(name);
+        }
+
+        function loadPage(name) {
+            if(!pages[name]) return;
+            canvas.innerHTML = pages[name].html;
+            canvas.style.backgroundColor = pages[name].bg;
+        }
+
+        function saveCurrentState() {
+            if(!pages[currentPage]) return;
+            pages[currentPage].html = canvas.innerHTML;
+            localStorage.setItem('wd_pages_v3', JSON.stringify(pages));
+        }
+
+        function addNewPage() {
+            const name = prompt("New Page Name:");
+            if(name && !pages[name]) {
+                saveCurrentState();
+                pages[name] = { html: '', title: name, fav: '', bg: '#ffffff', seo: { title: '', desc: '', keys: '' } };
+                currentPage = name;
+                renderPageOptions();
+                loadPage(name);
+                saveCurrentState();
+            }
+        }
+
+        function deletePage() {
+            if(Object.keys(pages).length <= 1) return alert("Keep at least one page.");
+            if(confirm("Delete " + currentPage + "?")) {
+                delete pages[currentPage];
+                currentPage = Object.keys(pages)[0];
+                renderPageOptions();
+                loadPage(currentPage);
+                saveCurrentState();
+            }
+        }
+
+        function setPageMeta() {
+            const newTitle = prompt("Page Title:", pages[currentPage].title);
+            const newFav = prompt("Favicon URL:", pages[currentPage].fav);
+            const newBg = prompt("Background Color (hex):", pages[currentPage].bg);
+            
+            if(newTitle) pages[currentPage].title = newTitle;
+            if(newFav !== null) pages[currentPage].fav = newFav;
+            if(newBg) {
+                pages[currentPage].bg = newBg;
+                canvas.style.backgroundColor = newBg;
+            }
+            saveCurrentState();
+        }
+
+        // --- ADD BLOCKS ---
+        function addBlock(type) {
+            let el;
+            let wrapper = document.createElement('div');
+            wrapper.className = 'wd-block fade-in';
+
+            if(type === 'h1' || type === 'p') {
+                el = document.createElement(type);
+                el.innerText = type === 'h1' ? "Title Here" : "Text content...";
+                el.contentEditable = "true";
+            } else if(type === 'input') {
+                el = document.createElement('input');
+                el.type = "text";
+                el.placeholder = "Type here...";
+                el.style.padding = "10px";
+                el.style.width = "100%";
+                el.dataset.js = ""; 
+            } else if(type === 'ul') {
+                el = document.createElement('ul');
+                el.innerHTML = '<li contenteditable="true">Item 1</li><li contenteditable="true">Item 2</li><li contenteditable="true">Item 3</li>';
+            } else if(type === 'img') {
+                el = document.createElement('img');
+                el.src = "https://via.placeholder.com/600x400";
+                el.alt = "Image description";
+                el.style.maxWidth = "100%";
+            } else if(type === 'button') {
+                el = document.createElement('a');
+                el.className = "wd-btn";
+                el.innerText = "Button";
+                el.href = "#";
+                el.style.display = "inline-block"; 
+                el.style.padding = "12px 25px";
+                el.style.background = "#0984e3";
+                el.style.color = "white";
+                el.style.borderRadius = "4px";
+                el.style.textDecoration = "none";
+                el.contentEditable = "true";
+                el.dataset.js = "";
+                el.addEventListener('click', e => e.preventDefault());
+            } else if (type === 'spacer') {
+                el = document.createElement('div');
+                el.style.height = "50px";
+                el.style.backgroundColor = "#eee";
+                el.dataset.spacer = "true";
+            } else if (type === 'video') {
+                el = document.createElement('div');
+                el.className = "wd-video";
+                el.innerHTML = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>';
+            } else if (type === 'table') {
+                el = document.createElement('table');
+                el.className = "wd-table";
+                el.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th contenteditable="true">Header 1</th>
+                            <th contenteditable="true">Header 2</th>
+                            <th contenteditable="true">Header 3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td contenteditable="true">Data 1</td>
+                            <td contenteditable="true">Data 2</td>
+                            <td contenteditable="true">Data 3</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true">Data 4</td>
+                            <td contenteditable="true">Data 5</td>
+                            <td contenteditable="true">Data 6</td>
+                        </tr>
+                    </tbody>
+                `;
+            } else if (type === 'menu') {
+                el = document.createElement('ul');
+                el.className = "wd-menu";
+                el.innerHTML = `
+                    <li><a href="#" contenteditable="true">Home</a></li>
+                    <li><a href="#" contenteditable="true">About</a></li>
+                    <li><a href="#" contenteditable="true">Services</a></li>
+                    <li><a href="#" contenteditable="true">Contact</a></li>
+                `;
+            }
+
+            if(el) {
+                wrapper.appendChild(el);
+                canvas.appendChild(wrapper);
+                selectBlock(wrapper);
+                saveCurrentState();
+            }
+        }
+
+        // --- SELECTION & EDITING ---
+        canvas.addEventListener('click', (e) => {
+            let target = e.target.closest('.wd-block');
+            if(target) {
+                e.stopPropagation();
+                selectBlock(target);
+            } else {
+                deselectAll();
+            }
+        });
+
+        function selectBlock(block) {
+            if(selectedBlock) selectedBlock.classList.remove('wd-selected');
+            selectedBlock = block;
+            selectedBlock.classList.add('wd-selected');
+            propBar.classList.remove('hidden');
+
+            const child = selectedBlock.firstElementChild;
+            const urlInput = document.getElementById('prop-url');
+            const altInput = document.getElementById('prop-alt');
+            const jsInput = document.getElementById('prop-js');
+
+            // Hide all special areas first
+            imgEffectsArea.classList.add('hidden');
+            tableControlsArea.classList.add('hidden');
+            menuControlsArea.classList.add('hidden');
+            jsArea.classList.add('hidden');
+
+            // Setup URL field
+            if(child.tagName === 'IMG') {
+                urlInput.value = child.src;
+                altInput.value = child.alt || "";
+                urlInput.parentElement.classList.remove('hidden');
+                altInput.parentElement.classList.remove('hidden');
+                imgEffectsArea.classList.remove('hidden');
+            } else if(child.tagName === 'A') {
+                urlInput.value = child.href;
+                urlInput.parentElement.classList.remove('hidden');
+                altInput.parentElement.classList.add('hidden');
+                jsArea.classList.remove('hidden');
+                jsInput.value = child.dataset.js || "";
+            } else if(child.classList && child.classList.contains('wd-video')) {
+                const iframe = child.querySelector('iframe');
+                urlInput.value = iframe ? iframe.src : "";
+                urlInput.parentElement.classList.remove('hidden');
+                altInput.parentElement.classList.add('hidden');
+            } else if(child.tagName === 'TABLE') {
+                tableControlsArea.classList.remove('hidden');
+                urlInput.parentElement.classList.add('hidden');
+                altInput.parentElement.classList.add('hidden');
+            } else if(child.classList && child.classList.contains('wd-menu')) {
+                menuControlsArea.classList.remove('hidden');
+                urlInput.parentElement.classList.add('hidden');
+                altInput.parentElement.classList.add('hidden');
+            } else {
+                urlInput.parentElement.classList.add('hidden');
+                altInput.parentElement.classList.add('hidden');
+            }
+
+            // Setup JS Area for inputs
+            if(child.tagName === 'INPUT') {
+                jsArea.classList.remove('hidden');
+                jsInput.value = child.dataset.js || "";
+            }
+        }
+
+        function deselectAll() {
+            if(selectedBlock) selectedBlock.classList.remove('wd-selected');
+            selectedBlock = null;
+            propBar.classList.add('hidden');
+            saveCurrentState();
+        }
+
+        // --- PROPERTY ACTIONS ---
+        function applyFormat(prop, val) {
+            if(!selectedBlock) return;
+            const child = selectedBlock.firstElementChild;
+            
+            if(child.tagName === 'UL' && !child.classList.contains('wd-menu')) {
+                child.querySelectorAll('li').forEach(li => li.style[prop] = val);
+            } else {
+                child.style[prop] = val;
+            }
+            saveCurrentState();
+        }
+
+        function applyClass(cls) {
+            if(!selectedBlock) return;
+            selectedBlock.classList.remove('text-left', 'text-center', 'text-right');
+            selectedBlock.classList.add(cls);
+            saveCurrentState();
+        }
+
+        function applyStyle(prop, val) {
+            if(!selectedBlock) return;
+            const child = selectedBlock.firstElementChild;
+            if(prop === 'backgroundColor') {
+                if(child.tagName === 'A' || child.tagName === 'INPUT') child.style.background = val;
+                else selectedBlock.style.background = val;
+            } else {
+                child.style[prop] = val;
+            }
+            saveCurrentState();
+        }
+
+        function applyDimension(prop, val) {
+            if(!selectedBlock || !val) return;
+            const child = selectedBlock.firstElementChild;
+            child.style[prop] = val + 'px';
+            saveCurrentState();
+        }
+
+        function applyAnimation(className) {
+            if(!selectedBlock) return;
+            selectedBlock.classList.remove('fade-in', 'slide-in-left', 'slide-in-right', 'bounce-in', 'zoom-in', 'rotate-in');
+            if(className) selectedBlock.classList.add(className);
+            saveCurrentState();
+        }
+
+        function toggleImgEffect(effectClass) {
+            if(!selectedBlock) return;
+            const img = selectedBlock.querySelector('img');
+            if(img) {
+                img.classList.toggle(effectClass);
+                saveCurrentState();
+            }
+        }
+
+        function updateUrl(val) {
+            if(!selectedBlock) return;
+            const child = selectedBlock.firstElementChild;
+            if(child.tagName === 'IMG') child.src = val;
+            if(child.tagName === 'A') child.href = val;
+            if(child.classList && child.classList.contains('wd-video')) {
+                const iframe = child.querySelector('iframe');
+                if(iframe) iframe.src = val;
+            }
+            saveCurrentState();
+        }
+
+        function updateAlt(val) {
+            if(!selectedBlock) return;
+            const img = selectedBlock.querySelector('img');
+            if(img) {
+                img.alt = val;
+                saveCurrentState();
+            }
+        }
+
+        function updateJS(code) {
+            if(!selectedBlock) return;
+            const child = selectedBlock.firstElementChild;
+            child.dataset.js = code;
+            saveCurrentState();
+        }
+
+        function updateSEO(type, val) {
+            if(!pages[currentPage].seo) pages[currentPage].seo = {};
+            pages[currentPage].seo[type] = val;
+            saveCurrentState();
+        }
+
+        // --- TABLE FUNCTIONS ---
+        function addTableRow() {
+            if(!selectedBlock) return;
+            const table = selectedBlock.querySelector('table');
+            if(!table) return;
+            
+            const tbody = table.querySelector('tbody') || table;
+            const colCount = table.rows[0].cells.length;
+            const newRow = tbody.insertRow();
+            
+            for(let i = 0; i < colCount; i++) {
+                const cell = newRow.insertCell();
+                cell.contentEditable = "true";
+                cell.innerText = "New Data";
+            }
+            saveCurrentState();
+        }
+
+        function addTableColumn() {
+            if(!selectedBlock) return;
+            const table = selectedBlock.querySelector('table');
+            if(!table) return;
+            
+            const thead = table.querySelector('thead');
+            if(thead) {
+                const headerRow = thead.rows[0];
+                const th = document.createElement('th');
+                th.contentEditable = "true";
+                th.innerText = "New Header";
+                headerRow.appendChild(th);
+            }
+            
+            const tbody = table.querySelector('tbody') || table;
+            const rows = tbody.rows;
+            for(let row of rows) {
+                const cell = row.insertCell();
+                cell.contentEditable = "true";
+                cell.innerText = "New Data";
+            }
+            saveCurrentState();
+        }
+
+        function deleteTableRow() {
+            if(!selectedBlock) return;
+            const table = selectedBlock.querySelector('table');
+            if(!table) return;
+            
+            const tbody = table.querySelector('tbody') || table;
+            if(tbody.rows.length > 1) {
+                tbody.deleteRow(tbody.rows.length - 1);
+                saveCurrentState();
+            } else {
+                alert("Table must have at least one row!");
+            }
+        }
+
+        function deleteTableColumn() {
+            if(!selectedBlock) return;
+            const table = selectedBlock.querySelector('table');
+            if(!table) return;
+            
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody') || table;
+            
+            if(table.rows[0].cells.length > 1) {
+                if(thead) {
+                    const headerRow = thead.rows[0];
+                    headerRow.deleteCell(headerRow.cells.length - 1);
+                }
+                
+                const rows = tbody.rows;
+                for(let row of rows) {
+                    if(row.cells.length > 0) {
+                        row.deleteCell(row.cells.length - 1);
+                    }
+                }
+                saveCurrentState();
+            } else {
+                alert("Table must have at least one column!");
+            }
+        }
+
+        // --- MENU FUNCTIONS ---
+        function addMenuItem() {
+            if(!selectedBlock) return;
+            const menu = selectedBlock.querySelector('.wd-menu');
+            if(!menu) return;
+            
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = "#";
+            a.contentEditable = "true";
+            a.innerText = "New Link";
+            li.appendChild(a);
+            menu.appendChild(li);
+            saveCurrentState();
+        }
+
+        function deleteMenuItem() {
+            if(!selectedBlock) return;
+            const menu = selectedBlock.querySelector('.wd-menu');
+            if(!menu) return;
+            
+            if(menu.children.length > 1) {
+                menu.removeChild(menu.lastElementChild);
+                saveCurrentState();
+            } else {
+                alert("Menu must have at least one item!");
+            }
+        }
+
+        function moveBlock(dir) {
+            if(!selectedBlock) return;
+            if(dir === 'up') {
+                if(selectedBlock.previousElementSibling) canvas.insertBefore(selectedBlock, selectedBlock.previousElementSibling);
+            } else {
+                if(selectedBlock.nextElementSibling) canvas.insertBefore(selectedBlock.nextElementSibling, selectedBlock);
+            }
+            saveCurrentState();
+        }
+
+        function duplicateBlock() {
+            if(!selectedBlock) {
+                alert("Please select a block to duplicate");
+                return;
+            }
+            const clone = selectedBlock.cloneNode(true);
+            clone.classList.remove('wd-selected');
+            canvas.insertBefore(clone, selectedBlock.nextElementSibling);
+            saveCurrentState();
+        }
+
+        function deleteBlock() {
+            if(selectedBlock && confirm('Delete this block?')) {
+                selectedBlock.remove();
+                deselectAll();
+            }
+        }
+
+        // --- TUTORIAL ---
+        function showTutorial() {
+            const modal = document.createElement('div');
+            modal.className = 'tutorial-modal';
+            modal.innerHTML = `
+                <div class="tutorial-content">
+                    <h2><i class="fas fa-graduation-cap"></i> Webdrow Pro Tutorial</h2>
+                    
+                    <h3><i class="fas fa-rocket"></i> Getting Started</h3>
+                    <ul>
+                        <li><strong>Add Elements:</strong> Click buttons at the bottom toolbar to add titles, text, images, videos, tables, menus, and more to your page</li>
+                        <li><strong>Edit Content:</strong> Click on any element to select it, then edit text directly or use the Design Studio panel</li>
+                        <li><strong>Multiple Pages:</strong> Create multiple pages using the + button, switch between them, and export each separately</li>
+                    </ul>
+
+                    <h3><i class="fas fa-palette"></i> Design Features</h3>
+                    <ul>
+                        <li><strong>Text Formatting:</strong> Bold, italic, underline, font family, font size, and colors</li>
+                        <li><strong>Animations:</strong> Add entrance animations like fade-in, slide, bounce, zoom, and rotate</li>
+                        <li><strong>Image Effects:</strong> Apply filters like grayscale, sepia, blur, brightness, shadows, and shapes</li>
+                        <li><strong>Dimensions:</strong> Set custom width and height for elements</li>
+                        <li><strong>Alignment:</strong> Align content left, center, or right</li>
+                    </ul>
+
+                    <h3><i class="fas fa-table"></i> Table Features</h3>
+                    <ul>
+                        <li><strong>Add Rows/Columns:</strong> Select a table and use the + Row / + Col buttons to expand it</li>
+                        <li><strong>Delete Rows/Columns:</strong> Use - Row / - Col buttons to remove rows or columns</li>
+                        <li><strong>Edit Cells:</strong> Click any cell to edit its content directly</li>
+                        <li><strong>Styling:</strong> Tables automatically have alternating row colors and hover effects</li>
+                    </ul>
+
+                    <h3><i class="fas fa-bars"></i> Menu Bar Features</h3>
+                    <ul>
+                        <li><strong>Add Menu Items:</strong> Select a menu and click "+ Item" to add new links</li>
+                        <li><strong>Edit Links:</strong> Click on menu text to change the link name</li>
+                        <li><strong>Set URLs:</strong> After editing text, select the menu item and update its URL in the Design Studio</li>
+                        <li><strong>Delete Items:</strong> Use "- Item" button to remove menu links</li>
+                    </ul>
+
+                    <h3><i class="fas fa-video"></i> Video Embedding</h3>
+                    <ul>
+                        <li><strong>YouTube:</strong> Use format: https://www.youtube.com/embed/VIDEO_ID</li>
+                        <li><strong>Vimeo:</strong> Use format: https://player.vimeo.com/video/VIDEO_ID</li>
+                        <li><strong>Edit URL:</strong> Select video block and change URL in Design Studio</li>
+                    </ul>
+
+                    <h3><i class="fas fa-search"></i> SEO Features</h3>
+                    <ul>
+                        <li><strong>SEO Title:</strong> Set a search engine friendly title for your page</li>
+                        <li><strong>Description:</strong> Add a meta description for better search results</li>
+                        <li><strong>Keywords:</strong> Add relevant keywords separated by commas</li>
+                    </ul>
+
+                    <h3><i class="fas fa-code"></i> Advanced Features</h3>
+                    <ul>
+                        <li><strong>JavaScript:</strong> Add custom JS code to buttons and inputs for interactive functionality</li>
+                        <li><strong>Hyperlinks:</strong> Set URLs for buttons and images</li>
+                        <li><strong>Alt Text:</strong> Add descriptions for images (important for SEO and accessibility)</li>
+                        <li><strong>Duplicate:</strong> Clone any element with the copy button</li>
+                        <li><strong>Reorder:</strong> Move blocks up or down to reorganize your page</li>
+                    </ul>
+
+                    <h3><i class="fas fa-download"></i> Exporting</h3>
+                    <ul>
+                        <li><strong>Export Button:</strong> Click the Export button to download your current page as HTML</li>
+                        <li><strong>Clean Code:</strong> Exported HTML is clean, optimized, and ready to upload to any web host</li>
+                        <li><strong>All Styles Included:</strong> CSS and functionality are embedded in the exported file</li>
+                    </ul>
+
+                    <h3><i class="fas fa-lightbulb"></i> Pro Tips</h3>
+                    <ul>
+                        <li>Use spacers to add vertical spacing between sections</li>
+                        <li>Animations play when the page loads in the exported version</li>
+                        <li>Tables and menus are fully responsive and mobile-friendly</li>
+                        <li>Your work auto-saves to browser storage as you build</li>
+                        <li>Export each page separately to create a multi-page website</li>
+                    </ul>
+
+                    <button class="tutorial-close" onclick="this.closest('.tutorial-modal').remove()">
+                        Got It! <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal) modal.remove();
+            });
+        }
+
+        // --- EXPORT LOGIC ---
+        function downloadSite() {
+            deselectAll();
+            const data = pages[currentPage];
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.html;
+            
+            tempDiv.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+            tempDiv.querySelectorAll('.wd-selected').forEach(el => el.classList.remove('wd-selected'));
+            
+            tempDiv.querySelectorAll('[data-js]').forEach(el => {
+                const code = el.getAttribute('data-js');
+                if(code) {
+                    if(el.tagName === 'INPUT') el.setAttribute('onchange', code);
+                    if(el.tagName === 'A') el.setAttribute('onclick', code);
+                }
+                el.removeAttribute('data-js');
+            });
+
+            tempDiv.querySelectorAll('[data-spacer]').forEach(el => {
+                el.style.backgroundColor = 'transparent';
+                el.removeAttribute('data-spacer');
+            });
+
+            const seo = data.seo || {};
+            const finalHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${seo.title || data.title}</title>
+    ${seo.desc ? `<meta name="description" content="${seo.desc}">` : ''}
+    ${seo.keys ? `<meta name="keywords" content="${seo.keys}">` : ''}
+    ${data.fav ? `<link rel="icon" href="${data.fav}">` : ''}
+    <style>
+        body { margin:0; padding:20px; font-family: sans-serif; background-color: ${data.bg}; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .wd-block { margin-bottom: 10px; } 
+        img { max-width: 100%; }
+        ul { text-align: left; display: inline-block; }
+        
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-in-left { animation: slideInLeft 0.5s ease-out; }
+        .slide-in-right { animation: slideInRight 0.5s ease-out; }
+        .bounce-in { animation: bounceIn 0.6s ease-out; }
+        .zoom-in { animation: zoomIn 0.5s ease-out; }
+        .rotate-in { animation: rotateIn 0.6s ease-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes rotateIn { from { transform: rotate(-200deg); opacity: 0; } to { transform: rotate(0); opacity: 1; } }
+        
+        /* Image Effects */
+        .img-grayscale { filter: grayscale(100%); }
+        .img-sepia { filter: sepia(100%); }
+        .img-blur { filter: blur(3px); }
+        .img-brightness { filter: brightness(1.3); }
+        .img-contrast { filter: contrast(1.5); }
+        .img-shadow { box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .img-rounded { border-radius: 15px; }
+        .img-circle { border-radius: 50%; }
+        
+        /* Table Styles */
+        .wd-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .wd-table th { background: #0984e3; color: white; padding: 12px; text-align: left; font-weight: bold; }
+        .wd-table td { padding: 10px; border: 1px solid #ddd; }
+        .wd-table tr:nth-child(even) { background: #f9f9f9; }
+        .wd-table tr:hover { background: #f0f0f0; }
+        
+        /* Menu Styles */
+        .wd-menu { background: #2d3436; padding: 0; margin: 0; list-style: none; display: flex; flex-wrap: wrap; }
+        .wd-menu li { position: relative; }
+        .wd-menu a { display: block; padding: 15px 20px; color: white; text-decoration: none; transition: all 0.3s; }
+        .wd-menu a:hover { background: #0984e3; }
+        
+        /* Video */
+        .wd-video { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; }
+        .wd-video iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    ${tempDiv.innerHTML}
+</body>
+</html>`;
+
+            const blob = new Blob([finalHTML], {type: "text/html"});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${currentPage}.html`;
+            link.click();
+            
+            alert("Page exported successfully! Upload the HTML file to your web host.");
+        }
+    </script>
+</body>
+</html>
